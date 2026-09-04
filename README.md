@@ -1,6 +1,6 @@
 # TakeMeHome
 
-Eine installierbare statische Progressive Web App für Busverbindungen vom aktuellen Standort zu drei festen Zielen in Tübingen.
+Eine installierbare statische Progressive Web App für Busverbindungen und optional verfügbare Miet-E-Roller vom aktuellen Standort zu konfigurierbaren Zielen in Tübingen.
 
 Die Anwendung besteht ausschließlich aus HTML, CSS und browsernativem JavaScript. Sie benötigt weder Node.js noch ein Frontend-Framework oder einen Paketmanager.
 
@@ -25,7 +25,7 @@ make serve
 
 Danach ist die App unter `http://localhost:3000` erreichbar. `make test` prüft die direkt auslieferbaren Dateien.
 
-Die Routen stammen von Transitous/OpenStreetMap. Die erste Busabfahrt wird über den öffentlichen Echtzeit-Stream von TüBus abgeglichen.
+Die Routen stammen von Transitous/OpenStreetMap. Optional berücksichtigt die Suche verfügbare E-Roller von Dott und Bolt als direkte Fahrt oder als Zu- und Abbringer zum Bus. In den Routendetails zeigt eine OpenStreetMap-Karte den aktuellen Fahrzeugstandort; auf Mobilgeräten kann zusätzlich direkt die Anbieter-App geöffnet werden. Die erste Busabfahrt wird über den öffentlichen Echtzeit-Stream von TüBus abgeglichen.
 
 ## Ziele konfigurieren
 

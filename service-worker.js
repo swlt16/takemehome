@@ -1,6 +1,6 @@
 "use strict";
 
-const CACHE_NAME = "takemehome-shell-v12";
+const CACHE_NAME = "takemehome-shell-v14";
 const scopeUrl = (path = "") => new URL(path, self.registration.scope).href;
 const APP_SHELL = [
   "",

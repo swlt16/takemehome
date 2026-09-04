@@ -2,7 +2,7 @@
   "id": "./",
   "name": "TakeMeHome",
   "short_name": "TakeMeHome",
-  "description": "Live-Busverbindungen vom aktuellen Standort zu konfigurierbaren Zielen in Tübingen.",
+  "description": "Live-Verbindungen mit Bus und optionalen Miet-E-Rollern zu konfigurierbaren Zielen in Tübingen.",
   "lang": "de-DE",
   "start_url": "./",
   "scope": "./",

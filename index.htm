@@ -8,14 +8,14 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-title" content="TakeMeHome">
     <meta name="apple-mobile-web-app-status-bar-style" content="default">
-    <meta name="description" content="Live-Busverbindungen von deinem Standort zu konfigurierbaren Zielen in Tübingen.">
+    <meta name="description" content="Live-Verbindungen mit Bus und optionalen Miet-E-Rollern zu konfigurierbaren Zielen in Tübingen.">
     <meta property="og:type" content="website">
-    <meta property="og:title" content="TakeMeHome — Busverbindungen in Tübingen">
-    <meta property="og:description" content="Busverbindungen vom aktuellen Standort zu konfigurierbaren Zielen in Tübingen.">
+    <meta property="og:title" content="TakeMeHome — Verbindungen in Tübingen">
+    <meta property="og:description" content="Verbindungen mit Bus und optionalen Miet-E-Rollern vom aktuellen Standort zu konfigurierbaren Zielen in Tübingen.">
     <meta name="twitter:card" content="summary">
-    <meta name="twitter:title" content="TakeMeHome — Busverbindungen in Tübingen">
-    <meta name="twitter:description" content="Busverbindungen vom aktuellen Standort zu konfigurierbaren Zielen in Tübingen.">
-    <title>TakeMeHome — Busverbindungen in Tübingen</title>
+    <meta name="twitter:title" content="TakeMeHome — Verbindungen in Tübingen">
+    <meta name="twitter:description" content="Verbindungen mit Bus und optionalen Miet-E-Rollern vom aktuellen Standort zu konfigurierbaren Zielen in Tübingen.">
+    <title>TakeMeHome — Verbindungen in Tübingen</title>
     <link rel="icon" href="./assets/favicon.svg">
     <link rel="apple-touch-icon" href="./assets/apple-touch-icon.png">
     <link rel="manifest" href="./manifest.webmanifest">
@@ -36,7 +36,7 @@
       </header>
 
       <section class="hero" id="top">
-        <p class="kicker">Busverbindungen in Tübingen</p>
+        <p class="kicker">Verbindungen in Tübingen</p>
         <h1>TakeMeHome</h1>
       </section>
 
@@ -44,14 +44,21 @@
         <div class="section-heading">
           <p class="kicker">Nächste Verbindungen</p>
         </div>
-        <div class="waiting-card" id="route-grid"><p>Nach deiner Standortfreigabe erscheinen hier automatisch die passenden Busverbindungen.</p></div>
+        <div class="waiting-card" id="route-grid"><p>Nach deiner Standortfreigabe erscheinen hier automatisch die passenden Verbindungen.</p></div>
       </section>
 
       <section class="preference-panel" aria-label="Verbindungen optimieren">
         <div><p class="eyebrow">Verbindung auswählen</p><strong>Was ist dir wichtiger?</strong></div>
-        <div class="preference-switch" role="group" aria-label="Routenpräferenz">
-          <button type="button" data-preference="fastest" aria-pressed="false"><span aria-hidden="true">⚡</span><span><strong>Schnellste Verbindung</strong><small>früheste Ankunft</small></span></button>
-          <button type="button" data-preference="least-walking" aria-pressed="true"><span aria-hidden="true">↗</span><span><strong>Wenig laufen</strong><small>kurze Fußwege</small></span></button>
+        <div class="route-options">
+          <div class="preference-switch" role="group" aria-label="Routenpräferenz">
+            <button type="button" data-preference="fastest" aria-pressed="false"><span aria-hidden="true">⚡</span><span><strong>Schnellste Verbindung</strong><small>früheste Ankunft</small></span></button>
+            <button type="button" data-preference="least-walking" aria-pressed="true"><span aria-hidden="true">↗</span><span><strong>Wenig laufen</strong><small>kurze Fußwege</small></span></button>
+          </div>
+          <label class="scooter-option" for="scooter-toggle">
+            <span><strong>Miet-E-Roller einbeziehen</strong><small>Dott und Bolt, falls verfügbar</small></span>
+            <input id="scooter-toggle" type="checkbox">
+            <span class="switch-track" aria-hidden="true"><span></span></span>
+          </label>
         </div>
       </section>
 

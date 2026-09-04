@@ -47,7 +47,8 @@ html[data-phase="error"] .header-dot { background: #d14f3b; }
 .preference-panel { margin: 0 28px 14px; padding: 20px; display: flex; align-items: center; justify-content: space-between; gap: 28px; border: 1px solid var(--border); border-radius: 12px; background: var(--surface); }
 .preference-panel > div:first-child { flex: none; }
 .preference-panel > div:first-child strong { display: block; margin-top: 4px; }
-.preference-switch { width: min(650px,68%); display: grid; grid-template-columns: 1fr 1fr; gap: 4px; padding: 4px; border-radius: 9px; background: #eceeeb; }
+.route-options { width: min(650px,68%); display: grid; gap: 8px; }
+.preference-switch { display: grid; grid-template-columns: 1fr 1fr; gap: 4px; padding: 4px; border-radius: 9px; background: #eceeeb; }
 .preference-switch button { min-height: 56px; padding: 8px 14px; display: flex; align-items: center; justify-content: center; gap: 10px; border: 0; border-radius: 7px; background: transparent; color: var(--muted); cursor: pointer; text-align: left; }
 .preference-switch button:hover { color: var(--text); }
 .preference-switch button[aria-pressed="true"] { background: var(--surface); color: var(--text); box-shadow: 0 1px 3px rgba(0,0,0,.1); }
@@ -55,6 +56,18 @@ html[data-phase="error"] .header-dot { background: #d14f3b; }
 .preference-switch strong, .preference-switch small { display: block; }
 .preference-switch strong { font-size: .82rem; }
 .preference-switch small { margin-top: 2px; font-size: .68rem; color: var(--muted); }
+.scooter-option { min-height: 54px; padding: 8px 12px 8px 16px; display: flex; align-items: center; justify-content: space-between; gap: 18px; border: 1px solid var(--border); border-radius: 9px; cursor: pointer; }
+.scooter-option:hover { border-color: var(--accent); }
+.scooter-option > span:first-child { min-width: 0; }
+.scooter-option strong, .scooter-option small { display: block; }
+.scooter-option strong { font-size: .82rem; }
+.scooter-option small { margin-top: 2px; color: var(--muted); font-size: .68rem; }
+.scooter-option input { position: absolute; opacity: 0; pointer-events: none; }
+.switch-track { width: 42px; height: 24px; padding: 3px; flex: none; border-radius: 999px; background: #c7cac5; transition: background .15s ease; }
+.switch-track span { width: 18px; height: 18px; display: block; border-radius: 50%; background: white; box-shadow: 0 1px 2px rgba(0,0,0,.25); transition: transform .15s ease; }
+.scooter-option input:checked + .switch-track { background: var(--accent); }
+.scooter-option input:checked + .switch-track span { transform: translateX(18px); }
+.scooter-option:focus-within { outline: 3px solid rgba(49,87,213,.35); outline-offset: 2px; }
 
 .location-bar { margin: 0 28px; padding: 17px 20px; display: grid; grid-template-columns: auto 1fr auto; gap: 14px; align-items: center; border: 1px solid var(--border); border-radius: 12px; background: var(--surface); }
 .location-icon { width: 38px; height: 38px; display: grid; place-items: center; border-radius: 50%; background: #e9edfa; }
@@ -83,6 +96,7 @@ html[data-phase="error"] .header-dot { background: #d14f3b; }
 .destination-copy > p:last-child { margin: 0; color: var(--muted); font-size: .75rem; line-height: 1.4; }
 .status-pill { grid-column: 1/-1; justify-self: start; display: inline-flex; align-items: center; gap: 6px; padding: 4px 8px; border-radius: 999px; background: #f0f1ef; color: var(--muted); font-size: .66rem; font-weight: 650; }
 .status-pill.live { background: #e9f6ec; color: var(--success); }
+.status-pill.rental { background: #e9edfa; color: var(--accent); }
 .status-pill.cancelled { background: #fae9e6; color: var(--danger); }
 .pulse-dot { width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
 .journey-hero { margin: 25px 0 18px; display: grid; grid-template-columns: auto 1fr auto; gap: 10px; align-items: end; }
@@ -115,6 +129,15 @@ html[data-phase="error"] .header-dot { background: #d14f3b; }
 .detail-heading span { color: var(--muted); white-space: nowrap; }
 .detail-copy p, .details-note { margin: 4px 0 0; color: var(--muted); font-size: .68rem; line-height: 1.45; }
 .details-note { padding-top: 11px; border-top: 1px solid var(--border); }
+.rental-map { margin: 2px 0 16px; overflow: hidden; border: 1px solid var(--border); border-radius: 8px; }
+.rental-map-heading { min-height: 58px; padding: 10px 12px; display: flex; align-items: center; justify-content: space-between; gap: 14px; background: #f7f8f6; }
+.rental-map-heading strong, .rental-map-heading span { display: block; }
+.rental-map-heading strong { font-size: .76rem; }
+.rental-map-heading span { margin-top: 3px; color: var(--muted); font-size: .65rem; }
+.rental-map-links { display: flex; flex: none; gap: 7px; }
+.rental-map-links a { padding: 6px 8px; border: 1px solid var(--border); border-radius: 5px; background: var(--surface); color: var(--text); text-decoration: none; font-size: .66rem; font-weight: 650; }
+.rental-map-links a:hover { border-color: var(--accent); color: var(--accent); }
+.rental-map iframe { width: 100%; height: 220px; display: block; border: 0; background: #e9ebe7; }
 .route-empty { min-height: 240px; padding-top: 38px; display: flex; gap: 12px; align-items: flex-start; }
 .route-empty > span { width: 36px; height: 36px; display: grid; place-items: center; flex: none; border-radius: 50%; background: #fae9e6; color: var(--danger); font-weight: 800; }
 .route-empty p { color: var(--muted); font-size: .78rem; line-height: 1.5; }
@@ -150,7 +173,7 @@ footer a { color: inherit; text-underline-offset: 3px; }
   .hero h1 { font-size: clamp(3rem,16vw,5rem); }
   .preference-panel { margin: 0 18px 12px; display: block; }
   .preference-panel > div:first-child { margin-bottom: 14px; }
-  .preference-switch { width: 100%; }
+  .route-options { width: 100%; }
   .preference-switch button { padding: 8px; }
   .preference-switch button > span:first-child { display: none; }
   .preference-switch strong { font-size: .75rem; }
@@ -161,6 +184,8 @@ footer a { color: inherit; text-underline-offset: 3px; }
   .route-card { display: block; }
   .journey-hero { gap: 7px; }
   .depart-time, .arrival-block strong { font-size: 2rem; }
+  .rental-map-heading { align-items: flex-start; flex-direction: column; }
+  .rental-map iframe { height: 250px; }
   footer { align-items: flex-start; flex-direction: column; }
 }
 

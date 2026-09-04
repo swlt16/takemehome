@@ -13,6 +13,8 @@ const state = {
   error: "",
   updatedAt: null,
   preference: "least-walking",
+  includeScooters: false,
+  routeRequestId: 0,
   streams: [],
   permissionState: "prompt",
 };
@@ -30,6 +32,7 @@ const elements = {
   routesSection: document.querySelector("#routes-section"),
   routeGrid: document.querySelector("#route-grid"),
   preferenceButtons: [...document.querySelectorAll("[data-preference]")],
+  scooterToggle: document.querySelector("#scooter-toggle"),
 };
 
 function remembersLocationAccess() {
@@ -150,9 +153,19 @@ function tuebusStopId(stopId) {
   return match?.[1] ?? null;
 }
 
+function rentalProviderName(leg) {
+  const name = String(leg?.rental?.systemName || leg?.rental?.providerGroupId || "Mietroller");
+  return name
+    .replace(/\s+t[uü]bingen$/i, "")
+    .replace(/\s+Technology OÜ$/i, "")
+    .trim() || "Mietroller";
+}
+
 function routeSummary(legs) {
-  const buses = legs.filter((leg) => leg.mode === "BUS");
-  return buses.length ? buses.map((leg) => leg.routeShortName || leg.displayName || "Bus").join(" → ") : "Keine Busfahrt";
+  return legs
+    .filter((leg) => leg.mode === "BUS" || leg.mode === "RENTAL")
+    .map((leg) => leg.mode === "RENTAL" ? `${rentalProviderName(leg)} E-Roller` : leg.routeShortName || leg.displayName || "Bus")
+    .join(" → ");
 }
 
 function walkingSeconds(itinerary) {
@@ -203,10 +216,72 @@ function statusMarkup(live, cancelled) {
   return `<span class="status-pill ${live ? "live" : "plan"}"><span class="pulse-dot" aria-hidden="true"></span>${live ? "TüBus live" : "Fahrplan"}</span>`;
 }
 
+function rentalStatusMarkup(leg) {
+  return `<span class="status-pill rental"><span class="pulse-dot" aria-hidden="true"></span>${escapeHtml(rentalProviderName(leg))} Mietroller</span>`;
+}
+
+function safeRentalUri(value) {
+  if (!value) return "";
+  try {
+    const url = new URL(value);
+    return ["https:", "http:", "bolt:"].includes(url.protocol) ? url.href : "";
+  } catch {
+    return "";
+  }
+}
+
+function rentalAppUri(leg) {
+  const rental = leg?.rental || {};
+  if (/iPad|iPhone|iPod/i.test(navigator.userAgent)) {
+    return safeRentalUri(rental.rentalUriIOS || rental.rentalUriWeb);
+  }
+  if (/Android/i.test(navigator.userAgent)) {
+    return safeRentalUri(rental.rentalUriAndroid || rental.rentalUriWeb);
+  }
+  return safeRentalUri(rental.rentalUriWeb);
+}
+
+function rentalMapMarkup(leg) {
+  const latitude = Number(leg?.from?.lat);
+  const longitude = Number(leg?.from?.lon);
+  if (!Number.isFinite(latitude) || !Number.isFinite(longitude)) return "";
+
+  const latitudePadding = 0.0022;
+  const longitudePadding = 0.0033;
+  const bbox = [
+    longitude - longitudePadding,
+    latitude - latitudePadding,
+    longitude + longitudePadding,
+    latitude + latitudePadding,
+  ].join(",");
+  const mapParameters = new URLSearchParams({ bbox, layer: "mapnik", marker: `${latitude},${longitude}` });
+  const mapUrl = `https://www.openstreetmap.org/export/embed.html?${mapParameters}`;
+  const fullMapUrl = `https://www.openstreetmap.org/?mlat=${encodeURIComponent(latitude)}&mlon=${encodeURIComponent(longitude)}#map=18/${encodeURIComponent(latitude)}/${encodeURIComponent(longitude)}`;
+  const appUri = rentalAppUri(leg);
+  const provider = rentalProviderName(leg);
+
+  return `
+    <section class="rental-map" aria-label="Standort des Miet-E-Rollers">
+      <div class="rental-map-heading">
+        <div><strong>${escapeHtml(provider)}-Roller finden</strong><span>Marker zeigt den aktuellen Fahrzeugstandort</span></div>
+        <div class="rental-map-links">
+          ${appUri ? `<a href="${escapeHtml(appUri)}">Anbieter-App</a>` : ""}
+          <a href="${escapeHtml(fullMapUrl)}" target="_blank" rel="noreferrer">Große Karte</a>
+        </div>
+      </div>
+      <iframe src="${escapeHtml(mapUrl)}" title="Karte zum ${escapeHtml(provider)}-Roller" loading="lazy" referrerpolicy="no-referrer"></iframe>
+    </section>`;
+}
+
 function detailMarkup(leg, index) {
   const isWalk = leg.mode === "WALK";
-  const symbol = isWalk ? "↗" : leg.routeShortName || "B";
-  const heading = isWalk ? `${minuteLabel(leg.duration)} zu Fuß` : `Bus ${leg.routeShortName || leg.displayName || ""}`;
+  const isRental = leg.mode === "RENTAL";
+  const symbol = isWalk ? "↗" : isRental ? "R" : leg.routeShortName || "B";
+  const heading = isWalk
+    ? `${minuteLabel(leg.duration)} zu Fuß`
+    : isRental
+      ? `${minuteLabel(leg.duration)} mit E-Roller`
+      : `Bus ${leg.routeShortName || leg.displayName || ""}`;
   const direction = !isWalk && leg.headsign ? ` · Richtung ${cleanStopName(leg.headsign)}` : "";
   const intermediateHauptbahnhofTracks = isWalk
     ? []
@@ -214,14 +289,22 @@ function detailMarkup(leg, index) {
   const platformNote = intermediateHauptbahnhofTracks.length
     ? `<p>Hauptbahnhof · Steig ${escapeHtml(intermediateHauptbahnhofTracks.join(" → "))}</p>`
     : "";
+  const legDescription = isRental
+    ? `${rentalProviderName(leg)} · bis zum Abstellpunkt`
+    : `${stopLabel(leg.from)} → ${stopLabel(leg.to)}${direction}`;
   return `
     <div class="detail-row" data-leg="${index}">
-      <div class="detail-symbol ${isWalk ? "walk" : "bus"}" aria-hidden="true">${escapeHtml(symbol)}</div>
+      <div class="detail-symbol ${isWalk ? "walk" : isRental ? "rental" : "bus"}" aria-hidden="true">${escapeHtml(symbol)}</div>
       <div class="detail-copy">
         <div class="detail-heading"><strong>${escapeHtml(heading)}</strong><span>${escapeHtml(formatClock(leg.startTime))}–${escapeHtml(formatClock(leg.endTime))}</span></div>
-        <p>${escapeHtml(stopLabel(leg.from))} → ${escapeHtml(stopLabel(leg.to))}${escapeHtml(direction)}</p>${platformNote}
+        <p>${escapeHtml(legDescription)}</p>${platformNote}
       </div>
     </div>`;
+}
+
+function transferLabel(legs) {
+  const busCount = legs.filter((leg) => leg.mode === "BUS").length;
+  return busCount <= 1 ? "Direkt" : `${busCount - 1}× umsteigen`;
 }
 
 function routeCardMarkup(result) {
@@ -234,7 +317,7 @@ function routeCardMarkup(result) {
           <div class="destination-mark" aria-hidden="true">${escapeHtml(destination.short)}</div>
           <div class="destination-copy"><p class="eyebrow">Nach</p><h2>${escapeHtml(destination.name)}</h2><p>${escapeHtml(destination.address)}</p></div>
         </div>
-        <div class="already-there"><span aria-hidden="true">✓</span><div><strong>Du bist schon da</strong><p>Das Ziel ist nur etwa ${escapeHtml(roundedDistance)} Meter entfernt. Dafür brauchst du keinen Bus.</p></div></div>
+        <div class="already-there"><span aria-hidden="true">✓</span><div><strong>Du bist schon da</strong><p>Das Ziel ist nur etwa ${escapeHtml(roundedDistance)} Meter entfernt. Dafür brauchst du keine Fahrt.</p></div></div>
       </article>`;
   }
   if (!itinerary) {
@@ -250,32 +333,51 @@ function routeCardMarkup(result) {
 
   const busLegs = itinerary.legs.filter((leg) => leg.mode === "BUS");
   const firstBus = busLegs[0];
-  const firstWalk = itinerary.legs.find((leg) => leg.mode === "WALK");
-  if (!firstBus) return "";
+  const firstRental = itinerary.legs.find((leg) => leg.mode === "RENTAL");
+  const firstRideIndex = itinerary.legs.findIndex((leg) => leg.mode === "BUS" || leg.mode === "RENTAL");
+  const firstRide = itinerary.legs[firstRideIndex];
+  const firstWalk = itinerary.legs.slice(0, firstRideIndex).find((leg) => leg.mode === "WALK");
+  if (!firstRide) return "";
   const live = state.liveDepartures.get(destination.id);
   const liveMinutes = Number(live?.countdown_minutes);
-  const departLabel = Number.isFinite(liveMinutes) ? (liveMinutes === 0 ? "Jetzt" : `${liveMinutes} Min.`) : formatClock(firstBus.startTime || itinerary.startTime);
+  const startsWithRental = firstRide.mode === "RENTAL";
+  const departLabel = startsWithRental
+    ? "Jetzt"
+    : Number.isFinite(liveMinutes)
+      ? (liveMinutes === 0 ? "Jetzt" : `${liveMinutes} Min.`)
+      : formatClock(firstBus.startTime || itinerary.startTime);
   const isExpanded = state.expanded === destination.id;
+  const quickTarget = startsWithRental
+    ? `zum ${rentalProviderName(firstRide)}-E-Roller`
+    : `bis ${stopLabel(firstBus.from)}`;
+  const detailsNote = firstBus
+    ? "Ankunft nach aktuellem Fahrplan; die Abfahrt des ersten Busses wird direkt mit TüBus abgeglichen."
+    : "Die Rollerverfügbarkeit stammt aus den aktuellen Sharing-Daten und kann sich kurzfristig ändern.";
+  const detailsButtonLabel = isExpanded
+    ? "Details schließen"
+    : firstRental
+      ? "Route & Karte ansehen"
+      : "Route ansehen";
 
   return `
     <article class="route-card tone-${escapeHtml(destination.tone)}">
       <div class="card-topline">
         <div class="destination-mark" aria-hidden="true">${escapeHtml(destination.short)}</div>
         <div class="destination-copy"><p class="eyebrow">Nach</p><h2>${escapeHtml(destination.name)}</h2><p>${escapeHtml(destination.address)}</p></div>
-        ${statusMarkup(Boolean(live?.is_realtime), Boolean(live?.cancelled || firstBus.cancelled))}
+        ${firstBus ? statusMarkup(Boolean(live?.is_realtime), Boolean(live?.cancelled || firstBus.cancelled)) : rentalStatusMarkup(firstRental)}
       </div>
       <div class="journey-hero">
         <div><span class="time-label">Los in</span><strong class="depart-time">${escapeHtml(departLabel)}</strong></div>
         <div class="journey-line" aria-hidden="true"><span></span><i>→</i><span></span></div>
         <div class="arrival-block"><span class="time-label">Ankunft</span><strong>${escapeHtml(formatClock(itinerary.endTime))}</strong></div>
       </div>
-      <div class="route-facts"><span class="bus-number">${escapeHtml(routeSummary(itinerary.legs))}</span><span>${escapeHtml(minuteLabel(itinerary.duration))}</span><span>${escapeHtml(minuteLabel(walkingSeconds(itinerary)))} Fußweg</span><span>${itinerary.transfers === 0 ? "Direkt" : `${escapeHtml(itinerary.transfers)}× umsteigen`}</span></div>
+      <div class="route-facts"><span class="bus-number">${escapeHtml(routeSummary(itinerary.legs))}</span><span>${escapeHtml(minuteLabel(itinerary.duration))}</span><span>${escapeHtml(minuteLabel(walkingSeconds(itinerary)))} Fußweg</span><span>${escapeHtml(transferLabel(itinerary.legs))}</span></div>
       <div class="quick-instruction">
         <span class="walk-icon" aria-hidden="true">↗</span>
-        <p><strong>${firstWalk ? escapeHtml(minuteLabel(firstWalk.duration)) : "Kurz"} zu Fuß</strong><span>bis ${escapeHtml(stopLabel(firstBus.from))}</span></p>
+        <p><strong>${firstWalk ? escapeHtml(minuteLabel(firstWalk.duration)) : "Kurz"} zu Fuß</strong><span>${escapeHtml(quickTarget)}</span></p>
       </div>
-      <button class="details-button" type="button" data-route-details="${escapeHtml(destination.id)}" aria-expanded="${isExpanded}">${isExpanded ? "Details schließen" : "Route ansehen"}<span aria-hidden="true">${isExpanded ? "−" : "+"}</span></button>
-      ${isExpanded ? `<div class="route-details">${itinerary.legs.map(detailMarkup).join("")}<p class="details-note">Ankunft nach aktuellem Fahrplan; die Abfahrt des ersten Busses wird direkt mit TüBus abgeglichen.</p></div>` : ""}
+      <button class="details-button" type="button" data-route-details="${escapeHtml(destination.id)}" aria-expanded="${isExpanded}">${escapeHtml(detailsButtonLabel)}<span aria-hidden="true">${isExpanded ? "−" : "+"}</span></button>
+      ${isExpanded ? `<div class="route-details">${itinerary.legs.map(detailMarkup).join("")}${firstRental ? rentalMapMarkup(firstRental) : ""}<p class="details-note">${escapeHtml(detailsNote)}</p></div>` : ""}
     </article>`;
 }
 
@@ -295,6 +397,7 @@ function render() {
   elements.refreshButton.title = refreshLabel;
 
   elements.preferenceButtons.forEach((button) => button.setAttribute("aria-pressed", String(button.dataset.preference === state.preference)));
+  elements.scooterToggle.checked = state.includeScooters;
 
   elements.locationTitle.textContent = state.phase === "locating" ? "Standort wird bestimmt …" : state.position ? "Aktueller Standort" : "Standortfreigabe benötigt";
   elements.locationCopy.textContent = state.position ? `${state.position.lat.toFixed(4)}, ${state.position.lon.toFixed(4)}` : "Nur für die aktuelle Routenabfrage";
@@ -327,7 +430,7 @@ function render() {
   } else {
     elements.routeGrid.className = "waiting-card";
     elements.routeGrid.removeAttribute("role");
-    elements.routeGrid.innerHTML = "<p>Nach deiner Standortfreigabe erscheinen hier automatisch die passenden Busverbindungen.</p>";
+    elements.routeGrid.innerHTML = "<p>Nach deiner Standortfreigabe erscheinen hier automatisch die passenden Verbindungen.</p>";
   }
 }
 
@@ -363,6 +466,8 @@ function connectLiveStreams() {
 }
 
 async function loadRoutes(point) {
+  const requestId = ++state.routeRequestId;
+  const includeScooters = state.includeScooters;
   state.phase = "loading";
   state.error = "";
   state.liveDepartures.clear();
@@ -370,7 +475,7 @@ async function loadRoutes(point) {
   render();
 
   try {
-    state.results = await Promise.all(destinations.map(async (destination) => {
+    const results = await Promise.all(destinations.map(async (destination) => {
       const distanceMeters = distanceBetweenMeters(point, destination.point);
       if (distanceMeters <= arrivalRadiusMeters) {
         return { destination, alternatives: [], nearby: true, distanceMeters };
@@ -379,27 +484,39 @@ async function loadRoutes(point) {
         fromPlace: `${point.lat},${point.lon}`,
         toPlace: `${destination.point.lat},${destination.point.lon}`,
         transitModes: "BUS",
-        directModes: "",
-        preTransitModes: "WALK",
-        postTransitModes: "WALK",
+        directModes: includeScooters ? "RENTAL" : "",
+        preTransitModes: includeScooters ? "WALK,RENTAL" : "WALK",
+        postTransitModes: includeScooters ? "WALK,RENTAL" : "WALK",
         detailedLegs: "false",
         maxTransfers: "2",
       });
+      if (includeScooters) {
+        params.set("directRentalFormFactors", "SCOOTER_STANDING");
+        params.set("preTransitRentalFormFactors", "SCOOTER_STANDING");
+        params.set("postTransitRentalFormFactors", "SCOOTER_STANDING");
+        params.set("directRentalPropulsionTypes", "ELECTRIC");
+        params.set("preTransitRentalPropulsionTypes", "ELECTRIC");
+        params.set("postTransitRentalPropulsionTypes", "ELECTRIC");
+      }
       try {
         const response = await fetch(`https://api.transitous.org/api/v6/plan?${params}`, { headers: { Accept: "application/json" } });
         if (!response.ok) throw new Error(`Routenserver: ${response.status}`);
         const data = await response.json();
-        const alternatives = [...(data.itineraries || [])].filter((item) => item.legs.some((leg) => leg.mode === "BUS"));
+        const alternatives = [...(data.itineraries || []), ...(data.direct || [])]
+          .filter((item) => item.legs.some((leg) => leg.mode === "BUS" || (includeScooters && leg.mode === "RENTAL")));
         return { destination, alternatives };
       } catch {
         return { destination, alternatives: [], error: "Die Live-Auskunft ist vorübergehend nicht erreichbar." };
       }
     }));
+    if (requestId !== state.routeRequestId) return;
+    state.results = results;
     state.updatedAt = new Date();
     state.phase = "ready";
     render();
     connectLiveStreams();
   } catch {
+    if (requestId !== state.routeRequestId) return;
     state.error = "Die Verbindungen konnten gerade nicht geladen werden.";
     state.phase = "error";
     render();
@@ -523,6 +640,14 @@ elements.preferenceButtons.forEach((button) => {
     render();
     if (state.phase === "ready") connectLiveStreams();
   });
+});
+
+elements.scooterToggle.addEventListener("change", () => {
+  state.includeScooters = elements.scooterToggle.checked;
+  state.liveDepartures.clear();
+  state.expanded = null;
+  if (state.position) loadRoutes(state.position);
+  else render();
 });
 
 elements.refreshButton.addEventListener("click", () => state.position ? loadRoutes(state.position) : requestLocation());
