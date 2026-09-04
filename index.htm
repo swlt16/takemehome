@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="de">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+    <meta name="theme-color" content="#f5f5f2">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-title" content="TakeMeHome">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="description" content="Live-Busverbindungen von deinem Standort zu konfigurierbaren Zielen in Tübingen.">
+    <meta property="og:type" content="website">
+    <meta property="og:title" content="TakeMeHome — Busverbindungen in Tübingen">
+    <meta property="og:description" content="Busverbindungen vom aktuellen Standort zu konfigurierbaren Zielen in Tübingen.">
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:title" content="TakeMeHome — Busverbindungen in Tübingen">
+    <meta name="twitter:description" content="Busverbindungen vom aktuellen Standort zu konfigurierbaren Zielen in Tübingen.">
+    <title>TakeMeHome — Busverbindungen in Tübingen</title>
+    <link rel="icon" href="./assets/favicon.svg">
+    <link rel="apple-touch-icon" href="./assets/apple-touch-icon.png">
+    <link rel="manifest" href="./manifest.webmanifest">
+    <link rel="stylesheet" href="./assets/styles.css">
+    <script src="./assets/app.js" defer></script>
+  </head>
+  <body>
+    <main>
+      <header class="site-header">
+        <a class="brand" href="#top" aria-label="TakeMeHome Startseite">
+          <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span>TakeMeHome</span>
+        </a>
+        <div class="header-actions">
+          <div class="header-status"><span class="header-dot"></span><span id="connection-status">Bereit</span></div>
+          <button class="refresh-button" id="refresh-button" type="button" aria-label="Verbindungen aktualisieren" title="Verbindungen aktualisieren"><span aria-hidden="true">↻</span></button>
+        </div>
+      </header>
+
+      <section class="hero" id="top">
+        <p class="kicker">Busverbindungen in Tübingen</p>
+        <h1>TakeMeHome</h1>
+      </section>
+
+      <section class="routes-section" id="routes-section" aria-busy="false">
+        <div class="section-heading">
+          <p class="kicker">Nächste Verbindungen</p>
+        </div>
+        <div class="waiting-card" id="route-grid"><p>Nach deiner Standortfreigabe erscheinen hier automatisch die passenden Busverbindungen.</p></div>
+      </section>
+
+      <section class="preference-panel" aria-label="Verbindungen optimieren">
+        <div><p class="eyebrow">Verbindung auswählen</p><strong>Was ist dir wichtiger?</strong></div>
+        <div class="preference-switch" role="group" aria-label="Routenpräferenz">
+          <button type="button" data-preference="fastest" aria-pressed="false"><span aria-hidden="true">⚡</span><span><strong>Schnellste Verbindung</strong><small>früheste Ankunft</small></span></button>
+          <button type="button" data-preference="least-walking" aria-pressed="true"><span aria-hidden="true">↗</span><span><strong>Wenig laufen</strong><small>kurze Fußwege</small></span></button>
+        </div>
+      </section>
+
+      <section class="location-bar" aria-live="polite">
+        <div class="location-icon" aria-hidden="true"><span></span></div>
+        <div><p class="eyebrow">Dein Startpunkt</p><strong id="location-title">Standortfreigabe benötigt</strong><p id="location-copy">Nur für die aktuelle Routenabfrage</p></div>
+        <time id="updated-at" hidden></time>
+      </section>
+
+      <section class="permission-panel" id="permission-panel" aria-live="polite">
+        <div class="permission-number">!</div>
+        <div><p class="eyebrow">Standort fehlt</p><h2>Einmal freigeben, direkt losfahren.</h2><p id="permission-error">Tippe auf „Standort verwenden“. Erst dann fragt Chrome nach deiner Berechtigung.</p></div>
+        <div class="permission-actions">
+          <geolocation id="geolocation-control" autolocate accuracymode="precise">
+            <button type="button" id="location-button">Standort verwenden</button>
+          </geolocation>
+        </div>
+      </section>
+
+      <noscript><section class="waiting-card"><p>JavaScript ist aus. Ohne Browserlogik kann TakeMeHome keine Position oder Verbindungen laden.</p></section></noscript>
+
+      <footer>
+        <span>TakeMeHome · privates Bastelprojekt</span>
+        <span>Daten: <a href="https://www.tuebus.de/abfahrt.html" target="_blank" rel="noreferrer">TüBus Live</a> · Routen: <a href="https://transitous.org/sources/" target="_blank" rel="noreferrer">Transitous / OpenStreetMap</a></span>
+        <span>Alle Angaben ohne Gewähr.</span>
+      </footer>
+    </main>
+  </body>
+</html>

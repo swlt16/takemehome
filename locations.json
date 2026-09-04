@@ -1,0 +1,29 @@
+{
+  "arrivalRadiusMeters": 250,
+  "locations": [
+    {
+      "id": "mensa",
+      "name": "Mensa Wilhelmstraße",
+      "address": "Wilhelmstraße 13, 72074 Tübingen",
+      "shortLabel": "MW",
+      "latitude": 48.5259108,
+      "longitude": 9.0608776
+    },
+    {
+      "id": "aixer",
+      "name": "Aixer Straße 27",
+      "address": "Aixer Straße 27, 72072 Tübingen",
+      "shortLabel": "A27",
+      "latitude": 48.5111,
+      "longitude": 9.0760784
+    },
+    {
+      "id": "sand",
+      "name": "Sand 14",
+      "address": "Sand 14, 72076 Tübingen",
+      "shortLabel": "S14",
+      "latitude": 48.5348276,
+      "longitude": 9.071096
+    }
+  ]
+}
